@@ -1,10 +1,10 @@
-include { SALMON_INDEX                          } from '../../modules/nf-core/salmon/index/main'
-include { SALMON_QUANT                          } from '../../modules/nf-core/salmon/quant/main'
-include { COMBINE_QUANTIFICATION_RESULTS_SALMON } from '../../modules/local/combine_quantification_results_salmon'
-include { SALMON_SPLIT_TABLE as SALMON_SPLIT_TABLE_EACH} from '../../modules/local/salmon_split_table'
-include { SALMON_SPLIT_TABLE as SALMON_SPLIT_TABLE_COMBINED} from '../../modules/local/salmon_split_table'
-include { EXTRACT_PROCESSED_READS               } from '../../modules/local/extract_processed_reads'
-include { TXIMPORT                        } from '../../modules/local/tximport/main'
+include { SALMON_INDEX                                      } from '../../modules/nf-core/salmon/index/main'
+include { SALMON_QUANT                                      } from '../../modules/nf-core/salmon/quant/main'
+include { COMBINE_QUANTIFICATION_RESULTS_SALMON             } from '../../modules/local/combine_quantification_results_salmon'
+include { SALMON_SPLIT_TABLE as SALMON_SPLIT_TABLE_EACH     } from '../../modules/local/salmon_split_table'
+include { SALMON_SPLIT_TABLE as SALMON_SPLIT_TABLE_COMBINED } from '../../modules/local/salmon_split_table'
+include { EXTRACT_PROCESSED_READS                           } from '../../modules/local/extract_processed_reads'
+include { TXIMPORT                                          } from '../../modules/local/tximport/main'
 
 
 
@@ -18,16 +18,27 @@ workflow SALMON_SELECTIVE_ALIGNMENT {
         ch_transcript_fasta_pathogen
         ch_transcript_fasta_host
         ch_annotations_host_salmon
+        
     main:
         ch_versions = Channel.empty()
-        ch_salmon_index = SALMON_INDEX ( ch_genome_fasta, ch_transcript_fasta ).index
+        ch_salmon_index = SALMON_INDEX ( ch_genome_fasta, 
+                                         ch_transcript_fasta
+                                         ).index
         ch_versions = ch_versions.mix(SALMON_INDEX.out.versions)
 
         def alignment_mode = false
-        SALMON_QUANT(ch_reads, ch_salmon_index, ch_gtf, ch_transcript_fasta, alignment_mode, params.libtype)
+        SALMON_QUANT(ch_reads, 
+                     ch_salmon_index, 
+                     ch_gtf, 
+                     ch_transcript_fasta, 
+                     alignment_mode, 
+                     params.libtype
+                     )
         ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
-        SALMON_SPLIT_TABLE_EACH(SALMON_QUANT.out.quant, ch_transcript_fasta_pathogen, ch_transcript_fasta_host)
+        SALMON_SPLIT_TABLE_EACH(SALMON_QUANT.out.quant, 
+                                ch_transcript_fasta_pathogen, 
+                                ch_transcript_fasta_host)
 
         input_files = SALMON_QUANT.out.results.map{it -> it[1]}.collect()
 

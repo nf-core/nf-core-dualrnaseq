@@ -26,11 +26,17 @@ process SALMON_QUANT {
     task.ext.when == null || task.ext.when
 
     script:
+    // set additional args to to additional_params 
+    def additional_params = params.salmon_sa_args ?: ''
+
+
     def args = task.ext.args   ?: ''
     prefix   = task.ext.prefix ?: "${meta.id}"
 
     def reference   = "--index $index"
     def input_reads = meta.single_end ? "-r $reads" : "-1 ${reads[0]} -2 ${reads[1]}"
+    
+    //def additional_params = null
     if (alignment_mode) {
         reference   = "-t $transcript_fasta"
         input_reads = "-a $reads"
@@ -65,6 +71,7 @@ process SALMON_QUANT {
         $reference \\
         $input_reads \\
         $args \\
+        $additional_params \\
         -o $prefix
 
     if [ -f $prefix/aux_info/meta_info.json ]; then

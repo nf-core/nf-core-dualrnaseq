@@ -80,6 +80,138 @@
                 }
             }
         },
+        "genome_references_and_annotation": {
+            "title": "Genome references and annotation",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "properties": {
+                "fasta_host": {
+                    "type": "string",
+                    "description": "Host fasta file",
+                    "fa_icon": "far fa-file"
+                },
+                "fasta_pathogen": {
+                    "type": "string",
+                    "description": "Pathogen fasta file",
+                    "fa_icon": "fas fa-file"
+                },
+                "gff_host": {
+                    "type": "string",
+                    "description": "Host GFF file",
+                    "fa_icon": "far fa-file"
+                },
+                "gff_host_tRNA": {
+                    "type": "string",
+                    "description": "Host GFF file for tRNAs (optional)",
+                    "fa_icon": "far fa-file"
+                },
+                "gff_pathogen": {
+                    "type": "string",
+                    "description": "Pathogen GFF",
+                    "fa_icon": "fas fa-file"
+                },
+                "transcript_fasta_host": {
+                    "type": "string",
+                    "description": "Host transcriptome file",
+                    "fa_icon": "far fa-file-alt"
+                },
+                "transcript_fasta_pathogen": {
+                    "type": "string",
+                    "description": "Pathogen transcriptome file",
+                    "fa_icon": "fas fa-file-alt"
+                }
+            },
+            "description": "The path to the files should be enclosed by quotes \"../..\""
+        },
+        "fastqc": {
+            "title": "FastQC",
+            "type": "object",
+            "description": "By default, the pipeline utilizes FastQC tool for quality control of sequencing reads, run before and after trimming",
+            "default": "",
+            "properties": {
+                "fastqc_args": {
+                    "type": "string",
+                    "description": "Define a set of additional fastqc parameters you wish to use, except --quiet --threads --noextract flags which are already specified in the dualrnaseq pipeline",
+                    "fa_icon": "fas fa-ellipsis-h"
+                }
+            },
+            "fa_icon": "fas fa-chart-bar"
+        },
+        "cutadapt": {
+            "title": "Cutadapt",
+            "type": "object",
+            "description": "Adapter and read trimming is performed by either Cutadapt or BBDuk.",
+            "default": "",
+            "properties": {
+                "cutadapt_args": {
+                    "type": "string",
+                    "description": "Additional parameters if needed",
+                    "fa_icon": "fas fa-ellipsis-h",
+                    "help_text": "Define a set of additional Cutadapt parameters you wish to use, such as -a or -A to specify custom adapter sequences."
+                }
+            },
+            "fa_icon": "fas fa-cut",
+            "help_text": "Cutadapt requires prior knowledge of the adaptors used during library preparation.\nBy default, the pipeline trims Illumina TruSeq adapters"
+        },
+        "salmon_general": {
+            "title": "Salmon - general",
+            "type": "object",
+            "description": "These parameters are available for Salmon in both Selective Alignment and Alignment-based mode",
+            "default": "",
+            "properties": {
+                "libtype": {
+                    "type": "string",
+                    "description": "Options for setting the library type. A = automatic detection",
+                    "fa_icon": "fas fa-sliders-h"
+                },
+                "gene_feature_gff_to_create_transcriptome_host": {
+                    "type": "string",
+                    "default": "['exon', 'tRNA']",
+                    "description": "The pipeline uses gene features from the 3rd column of the host annotative file (gff3) to extract the coordinates of transcripts to be quantified.  By default, the pipeline useanscriptome_hosts exon from the --gff_host file and tRNA from the --gff_host_tRNA file",
+                    "fa_icon": "fas fa-sliders-h"
+                },
+                "gene_feature_gff_to_create_transcriptome_pathogen": {
+                    "type": "string",
+                    "default": "['gene', 'sRNA', 'tRNA', 'rRNA']",
+                    "description": "The pipeline uses gene features from the 3rd column of the pathogen annotative fikle (gff3) to extract the coordinates of transcripts to be quantified.  By default, the pipeline uses features as gene, sRNA, tRNA and rRNA from the --gff_pathogen file.",
+                    "fa_icon": "fas fa-sliders-h"
+                },
+                "gene_attribute_gff_to_create_transcriptome_host": {
+                    "type": "string",
+                    "default": "transcript_id",
+                    "description": "This flag defines the gene attribute from the 9th column of the host annotative (gff3) file, where the transcript names are extracted.  By default, the pipeline extracts transcript_id from the --gff_host file",
+                    "fa_icon": "fas fa-sliders-h"
+                },
+                "gene_attribute_gff_to_create_transcriptome_pathogen": {
+                    "type": "string",
+                    "default": "locus_tag",
+                    "description": "This flag defines the gene attribute from the 9th column of the pathogen annotative (gff3) file, where transcript, genes or CDS regions are extracted.  By default, the pipeline extracts locus_tag from the --gff_pathogen file",
+                    "fa_icon": "fas fa-sliders-h"
+                }
+            },
+            "fa_icon": "fas fa-fish"
+        },
+        "salmon_selective_alignment": {
+            "title": "Salmon - Selective alignment",
+            "type": "object",
+            "description": "Parameters listed below are available only for Salmon with Selective Alignment.",
+            "default": "",
+            "properties": {
+                "salmon_sa_index_args": {
+                    "type": "string",
+                    "default": "-k 21",
+                    "description": "Set of additional parameters for creating an index with Salmon Selective Alignment. By default, the kmer size is set at 21. Multiple parameters can be passed - for example: --salmon_sa_index_args=\"--keepDuplicates -k 21\". ",
+                    "fa_icon": "fas fa-ellipsis-h"
+                },
+                "salmon_sa_args": {
+                    "type": "string",
+                    "default": "--softclipOverhangs",
+                    "description": "Set of additional parameters for mapping with Salmon Selective Alignment. By default, the pipeline allows soft-clipping of overhanging reads. Multiple parameters can be passed - for example: --salmon_sa_args=\"--softclipOverhangs --allowDovetail\" ",
+                    "fa_icon": "fas fa-ellipsis-h"
+                }
+            },
+            "fa_icon": "fas fa-fish"
+        },
         "institutional_config_options": {
             "title": "Institutional config options",
             "type": "object",

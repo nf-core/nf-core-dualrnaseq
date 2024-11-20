@@ -96,25 +96,32 @@ workflow DUALRNASEQ {
     )
     ch_versions = ch_versions.mix(INPUT_CHECK.out.versions)
 
+    // if skip_tools passed, but not contain fastqc
     if (!(params.skip_tools && params.skip_tools.split(',').contains('fastqc'))) {
             FASTQC(INPUT_CHECK.out.reads)
             ch_versions = ch_versions.mix(FASTQC.out.versions.first())
     }
 
-    ch_reads = INPUT_CHECK.out.reads
+    // Store input reads
+    // ch_reads = INPUT_CHECK.out.reads // prev code
+    ch_reads = INPUT_CHECK.out.reads.map { meta, reads -> tuple(meta, reads) }
+
+    // if skip_tools passed, but not contain cutadapt
     if (!(params.skip_tools && params.skip_tools.split(',').contains('cutadapt'))) {
-            CUTADAPT(INPUT_CHECK.out.reads)
-            ch_reads = CUTADAPT.out.reads
-            ch_versions = ch_versions.mix(CUTADAPT.out.versions.first())
+        CUTADAPT(ch_reads) 
+        ch_reads = CUTADAPT.out.reads
+        ch_versions = ch_versions.mix(CUTADAPT.out.versions.first())
     }
 
+    // if skip_tools passed, but not contain fastqc and cutadapt - so should run fastqc after trimming
     if (!(params.skip_tools && (params.skip_tools.split(',').contains('fastqc') || params.skip_tools.split(',').contains('cutadapt')))) {
             FASTQC_AFTER_TRIMMING(ch_reads)
             ch_versions = ch_versions.mix(FASTQC_AFTER_TRIMMING.out.versions.first())
     }
 
 
-
+    // uncompress files, merge host and pathogen files together, 
+    // update features in reference files to be compatable with software
     PREPARE_REFERENCE_FILES(
         params.fasta_host,
         params.gff_host,
@@ -123,6 +130,8 @@ workflow DUALRNASEQ {
         params.gff_pathogen
     )
 
+
+    // Run Salmon selective alighment
     if ( params.run_salmon_selective_alignment ) {
         SALMON_SELECTIVE_ALIGNMENT (
             ch_reads,
@@ -136,6 +145,7 @@ workflow DUALRNASEQ {
         ch_versions = ch_versions.mix(SALMON_SELECTIVE_ALIGNMENT.out.versions)
     }
 
+    // Run Salmon alignment based
     if ( params.run_salmon_alignment_based_mode ) {
         SALMON_ALIGNMENT_BASED (
             ch_reads,
@@ -150,14 +160,13 @@ workflow DUALRNASEQ {
     }
 
 
-
+    // Capture software versions
     CUSTOM_DUMPSOFTWAREVERSIONS (
         ch_versions.unique().collectFile(name: 'collated_versions.yml')
     )
 
 
     // MODULE: MultiQC
-
     workflow_summary    = WorkflowDualrnaseq.paramsSummaryMultiqc(workflow, summary_params)
     ch_workflow_summary = Channel.value(workflow_summary)
 

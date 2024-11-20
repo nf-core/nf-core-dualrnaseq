@@ -31,7 +31,12 @@ workflow SALMON_ALIGNMENT_BASED {
 
         ch_dummy_file = file("$projectDir/assets/dummy_file.txt", checkIfExists: true)
         def alignment_mode = true
-        SALMON_QUANT(STAR_ALIGN.out.bam_transcript, ch_dummy_file, ch_gtf, ch_transcript_fasta, alignment_mode, params.libtype)
+        SALMON_QUANT(STAR_ALIGN.out.bam_transcript, 
+                     ch_dummy_file, ch_gtf, 
+                     ch_transcript_fasta, 
+                     alignment_mode, 
+                     params.libtype, 
+                     params.salmon_ab_args ?: '')
         ch_versions = ch_versions.mix(SALMON_QUANT.out.versions)
 
         SALMON_SPLIT_TABLE_EACH(SALMON_QUANT.out.quant, ch_transcript_fasta_pathogen, ch_transcript_fasta_host)
