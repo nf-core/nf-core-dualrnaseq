@@ -43,18 +43,18 @@
             }
         },
         "reference_genome_options": {
-            "title": "Reference genome options",
+            "title": "igenome reference options",
             "type": "object",
             "fa_icon": "fas fa-dna",
-            "description": "Reference genome related files and options required for the workflow.",
+            "description": "Reference igenome related files and options required for the workflow.",
             "properties": {
-                "genome": {
+                "igenome": {
                     "type": "string",
                     "description": "Name of iGenomes reference.",
                     "fa_icon": "fas fa-book",
                     "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
                 },
-                "fasta": {
+                "ifasta": {
                     "type": "string",
                     "format": "file-path",
                     "mimetype": "text/plain",
@@ -85,37 +85,42 @@
             "type": "object",
             "fa_icon": "fas fa-dna",
             "properties": {
-                "fasta_host": {
+                "host_organism": {
                     "type": "string",
-                    "description": "Host fasta file",
+                    "description": "Change to custom name if desired, ie Human_hela_cells",
                     "fa_icon": "far fa-file"
                 },
-                "fasta_pathogen": {
+                "pathogen_organism": {
                     "type": "string",
-                    "description": "Pathogen fasta file",
+                    "description": "Change to custom name if desired, ie Salmonella_SL1344",
+                    "fa_icon": "far fa-file"
+                },
+                "host_fasta_genome": {
+                    "type": "string",
+                    "description": "Host genome fasta file",
+                    "fa_icon": "far fa-file"
+                },
+                "pathogen_fasta_genome": {
+                    "type": "string",
+                    "description": "Pathogen genome fasta file",
                     "fa_icon": "fas fa-file"
                 },
-                "gff_host": {
+                "host_gff": {
                     "type": "string",
                     "description": "Host GFF file",
                     "fa_icon": "far fa-file"
                 },
-                "gff_host_tRNA": {
-                    "type": "string",
-                    "description": "Host GFF file for tRNAs (optional)",
-                    "fa_icon": "far fa-file"
-                },
-                "gff_pathogen": {
+                "pathogen_gff": {
                     "type": "string",
                     "description": "Pathogen GFF",
                     "fa_icon": "fas fa-file"
                 },
-                "transcript_fasta_host": {
+                "host_fasta_transcripts": {
                     "type": "string",
                     "description": "Host transcriptome file",
                     "fa_icon": "far fa-file-alt"
                 },
-                "transcript_fasta_pathogen": {
+                "pathogen_fasta_transcripts": {
                     "type": "string",
                     "description": "Pathogen transcriptome file",
                     "fa_icon": "fas fa-file-alt"
@@ -167,7 +172,7 @@
                 "gene_feature_gff_to_create_transcriptome_host": {
                     "type": "string",
                     "default": "['exon', 'tRNA']",
-                    "description": "The pipeline uses gene features from the 3rd column of the host annotative file (gff3) to extract the coordinates of transcripts to be quantified.  By default, the pipeline useanscriptome_hosts exon from the --gff_host file and tRNA from the --gff_host_tRNA file",
+                    "description": "The pipeline uses gene features from the 3rd column of the host annotative file (gff3) to extract the coordinates of transcripts to be quantified.  By default, the pipeline useanscriptome_hosts exon from the --gff_host",
                     "fa_icon": "fas fa-sliders-h"
                 },
                 "gene_feature_gff_to_create_transcriptome_pathogen": {
@@ -197,6 +202,12 @@
             "description": "Parameters listed below are available only for Salmon with Selective Alignment.",
             "default": "",
             "properties": {
+                "run_salmon_SA": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Run Salmon selective alignment. Does not need a value, just run --run_salmon_SA",
+                    "fa_icon": "fas fa-running"
+                },
                 "salmon_sa_index_args": {
                     "type": "string",
                     "default": "-k 21",
@@ -211,6 +222,56 @@
                 }
             },
             "fa_icon": "fas fa-fish"
+        },
+        "star_salmon_alignment_based_mode": {
+            "title": "Salmon - Alignment based mode",
+            "type": "object",
+            "description": "Options for Alignment-based mode",
+            "default": "",
+            "properties": {
+                "run_salmon_AB": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "To run Salmon alignment-based mode",
+                    "fa_icon": "fas fa-running"
+                },
+                "salmon_ab_args": {
+                    "type": "string",
+                    "description": "Define a set of additional salmon quant parameters you wish to use in salmon alignment-based mode.",
+                    "fa_icon": "fas fa-ellipsis-h"
+                }
+            },
+            "fa_icon": "fas fa-fish"
+        },
+        "star_alignment": {
+            "title": "STAR genome alignment",
+            "type": "object",
+            "description": "Options for STAR genome alignment",
+            "default": "",
+            "properties": {
+                "run_star": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "To run STAR genome alignment",
+                    "fa_icon": "fas fa-running"
+                }
+            },
+            "fa_icon": "fas fa-star"
+        },
+        "htseq_count_features": {
+            "title": "HTSeq - count genome features",
+            "type": "object",
+            "description": "Options for HTSeq count",
+            "default": "",
+            "properties": {
+                "run_htseq": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "To run HTSeq count on a aligned genome file",
+                    "fa_icon": "fas fa-running"
+                }
+            },
+            "fa_icon": "fas fa-star"
         },
         "institutional_config_options": {
             "title": "Institutional config options",

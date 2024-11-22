@@ -2,7 +2,6 @@ include {
     UNZIPFILES as UNCOMPRESS_HOST_FASTA_GENOME;
     UNZIPFILES as UNCOMPRESS_PATHOGEN_FASTA_GENOME;
     UNZIPFILES as UNCOMPRESS_HOST_GFF;
-    UNZIPFILES as UNCOMPRESS_HOST_TRNA_GFF;
     UNZIPFILES as UNCOMPRESS_PATHOGEN_GFF;
     UNZIPFILES as UNCOMPRESS_HOST_TRANSCRIPTOME;
     UNZIPFILES as UNCOMPRESS_PATHOGEN_TRANSCRIPTOME
@@ -10,7 +9,6 @@ include {
 
 include {
     REPLACE_ATTRIBUTE_GFF_STAR_SALMON as REPLACE_ATTRIBUTE_GFF_STAR_SALMON_HOST;
-    REPLACE_ATTRIBUTE_GFF_STAR_SALMON as REPLACE_ATTRIBUTE_GFF_STAR_SALMON_TRNA_FILE;
     REPLACE_ATTRIBUTE_GFF_STAR_SALMON as REPLACE_ATTRIBUTE_GFF_STAR_SALMON_PATHOGEN;
 } from '../../modules/local/replace_attribute'
 
@@ -20,12 +18,10 @@ include {
  } from '../../modules/local/replace_gene_feature'
 
 include {
-    COMBINE_FILES as COMBINE_HOST_GENOME_TRNA_GFF_STAR_SALMON;
-    COMBINE_FILES as COMBINE_PATHOGEN_HOST_GFF_FILES_HTSEQ;
+    // COMBINE_FILES as COMBINE_PATHOGEN_HOST_GFF_FILES_HTSEQ;
     COMBINE_FILES as COMBINE_FILES_PATHOGEN_HOST_GFF;
     COMBINE_FILES as COMBINE_FILES_FASTA;
     COMBINE_FILES as COMBINE_FILES_TRANSCRIPTOME_FILES;
-    COMBINE_FILES as COMBINE_HOST_GFF_FILES
 }  from '../../modules/local/combine_files'
 
 
@@ -33,210 +29,253 @@ include { PREPARE_HOST_TRANSCRIPTOME      } from './prepare_host_transcriptome'
 include { PREPARE_PATHOGEN_TRANSCRIPTOME  } from './prepare_pathogen_transcriptome'
 
 include {
-    EXTRACT_ANNOTATIONS as EXTRACT_ANNOTATIONS_HOST_HTSEQ;
+    // EXTRACT_ANNOTATIONS as EXTRACT_ANNOTATIONS_HOST_HTSEQ;
     EXTRACT_ANNOTATIONS as EXTRACT_ANNOTATIONS_HOST_SALMON;
-    EXTRACT_ANNOTATIONS as EXTRACT_ANNOTATIONS_PATHOGEN_HTSEQ;
+    // EXTRACT_ANNOTATIONS as EXTRACT_ANNOTATIONS_PATHOGEN_HTSEQ;
     EXTRACT_ANNOTATIONS as EXTRACT_ANNOTATIONS_PATHOGEN_SALMON
 } from '../../modules/local/extract_annotations'
 
 
 workflow PREPARE_REFERENCE_FILES{
   take:
-    fasta_host
-    gff_host
-    gff_host_tRNA
-    fasta_pathogen
-    gff_pathogen
+    host_fasta_genome //fasta_host
+    host_gff //gff_host
+    pathogen_fasta_genome //fasta_pathogen
+    pathogen_gff //gff_pathogen
 
   main:
     ch_transcriptome = Channel.empty()
     ch_host_transcriptome = Channel.empty()
     ch_pathogen_transcriptome = Channel.empty()
+    ch_host_pathogen_gff = Channel.empty()
 
-    ch_gene_feature_pat = Channel
+    ch_gene_feature_pathogen = Channel
 	    .value(params.gene_feature_gff_to_create_transcriptome_pathogen)
 	    .collect()
-    //
+    
+    
+
+
+
+    // -------------------
     // uncompress fasta files and gff files
-    //
+    // -------------------
 
-    ch_fasta_host = Channel.value(file(params.fasta_host, checkIfExists: true))
-    ch_gff_host = Channel.value(file(params.gff_host, checkIfExists: true))
-    ch_gff_host_tRNA = Channel.value(file(params.gff_host_tRNA, checkIfExists: true)) 
-    ch_gff_pathogen = Channel.value(file(params.gff_pathogen, checkIfExists: true))
-    ch_fasta_pathogen = Channel.value(file(params.fasta_pathogen, checkIfExists: true)) 
+    // Capture files
+    ch_host_fasta_genome = Channel.value(file(params.host_fasta_genome, checkIfExists: true))
+    ch_host_gff = Channel.value(file(params.host_gff, checkIfExists: true))
+    ch_pathogen_gff = Channel.value(file(params.pathogen_gff, checkIfExists: true))
+    ch_pathogen_fasta_genome = Channel.value(file(params.pathogen_fasta_genome, checkIfExists: true)) 
 
-    if (params.fasta_pathogen.endsWith('.gz') || params.fasta_pathogen.endsWith('.zip')){
-        ch_fasta_pathogen_unzipped = UNCOMPRESS_PATHOGEN_FASTA_GENOME(ch_fasta_pathogen)
+    // Uncompress pathogen (genome) fasta if needed
+    if (params.pathogen_fasta_genome.endsWith('.gz') || params.pathogen_fasta_genome.endsWith('.zip')){
+        ch_pathogen_fasta_genome_unzipped = UNCOMPRESS_PATHOGEN_FASTA_GENOME(ch_pathogen_fasta_genome)
     } else {
-        ch_fasta_pathogen_unzipped = ch_fasta_pathogen
+        ch_pathogen_fasta_genome_unzipped = ch_pathogen_fasta_genome
     }
 
-    if (params.gff_pathogen.endsWith('.gz') || params.gff_pathogen.endsWith('.zip')){
-        ch_gff_pathogen_unzipped = UNCOMPRESS_PATHOGEN_GFF(ch_gff_pathogen)
+    // Uncompress pathogen gff if needed
+    if (params.pathogen_gff.endsWith('.gz') || params.pathogen_gff.endsWith('.zip')){
+        ch_pathogen_gff_unzipped = UNCOMPRESS_PATHOGEN_GFF(ch_pathogen_gff)
     } else {
-        ch_gff_pathogen_unzipped = ch_gff_pathogen
+        ch_pathogen_gff_unzipped = ch_pathogen_gff
     }
 
-    if (params.fasta_host.endsWith('.gz') || params.fasta_host.endsWith('.zip')){
-        ch_fasta_host_unzipped = UNCOMPRESS_HOST_FASTA_GENOME(ch_fasta_host)
+    // Uncompress host fasta if needed
+    if (params.host_fasta_genome.endsWith('.gz') || params.host_fasta_genome.endsWith('.zip')){
+        ch_host_fasta_genome_unzipped = UNCOMPRESS_HOST_FASTA_GENOME(ch_host_fasta_genome)
     } else {
-        ch_fasta_host_unzipped = ch_fasta_host
+        ch_host_fasta_genome_unzipped = ch_host_fasta_genome
     }
 
-    if (params.gff_host.endsWith('.gz') || params.gff_host.endsWith('.zip')){
-        ch_gff_host_unzipped = UNCOMPRESS_HOST_GFF(ch_gff_host)
+    // Uncompress host gff if needed
+    if (params.host_gff.endsWith('.gz') || params.host_gff.endsWith('.zip')){
+        ch_host_gff_unzipped = UNCOMPRESS_HOST_GFF(ch_host_gff)
     } else {
-        ch_gff_host_unzipped = ch_gff_host
+        ch_host_gff_unzipped = ch_host_gff
     }
 
-    if (params.gff_host_tRNA.endsWith('.gz') || params.gff_host_tRNA.endsWith('.zip')){
-        ch_gff_host_tRNA_unzipped = UNCOMPRESS_HOST_TRNA_GFF(ch_gff_host_tRNA)
-    } else {
-        ch_gff_host_tRNA_unzipped = ch_gff_host_tRNA
-    }
+
+
+    // -------------------
+    // Combine pathogen and host fastas
+    // -------------------
+
+    // Combine both host and pathogen fasta files and save
+    COMBINE_FILES_FASTA(ch_pathogen_fasta_genome_unzipped, ch_host_fasta_genome_unzipped, 'host_pathogen_genome.fasta' )
+
+
 
     //
-    // combine pathogen and host fasta and gff files
+    // Execute steps specific for mapping-quantification modes
     //
 
-    COMBINE_FILES_FASTA(ch_fasta_pathogen_unzipped, ch_fasta_host_unzipped, 'host_pathogen.fasta' )
 
-    //TODO add if statement if(params.gff_host_tRNA); if(params.run_htseq_uniquely_mapped)
-    COMBINE_HOST_GFF_FILES(ch_gff_host_unzipped,ch_gff_host_tRNA_unzipped, "host_genome_with_tRNA.gff3")
+    // Salmon SA or Salmon AB (transcriptome-based)
+    if(params.run_salmon_SA | params.run_salmon_AB) {
+      
+      // HOST - Has a host transcriptome (fasta) been passed? 
+      if(params.host_fasta_transcripts){
+          
+          // Grab the host transcriptome file
+          ch_host_fasta_transcripts  = params.host_fasta_transcripts ? Channel.value(file(params.host_fasta_transcripts, checkIfExists: true )) : Channel.empty()
 
-    //
-    // execute steps specific for mapping-quantification modes
-    //
-
-    if(params.run_salmon_selective_alignment | params.run_salmon_alignment_based_mode) {
-      if(params.transcript_fasta_host){
-          ch_host_transcriptome  = params.transcript_fasta_host ? Channel.value(file(params.transcript_fasta_host, checkIfExists: true )) : Channel.empty()
-
-          if (params.transcript_fasta_host.endsWith('.gz') || params.transcript_fasta_host.endsWith('.zip')){
-                  UNCOMPRESS_HOST_TRANSCRIPTOME(ch_host_transcriptome)
-                  ch_transcript_host_unzipped = UNCOMPRESS_HOST_TRANSCRIPTOME.out.files
+          // Uncompress if needed
+          if (params.host_fasta_transcripts.endsWith('.gz') || params.host_fasta_transcripts.endsWith('.zip')){
+                  UNCOMPRESS_HOST_TRANSCRIPTOME(ch_host_fasta_transcripts)
+                  ch_host_fasta_transcripts_unzipped = UNCOMPRESS_HOST_TRANSCRIPTOME.out.files
           } else {
-                  ch_transcript_host_unzipped = ch_host_transcriptome
+                  ch_host_fasta_transcripts_unzipped = ch_host_fasta_transcripts
           }
 
       } else {
-            
+      // No host transcriptome passed - prepare      
       PREPARE_HOST_TRANSCRIPTOME(
-        ch_fasta_host_unzipped,
-        ch_gff_host_unzipped,
-        ch_gff_host_tRNA_unzipped
+        ch_host_fasta_genome_unzipped,
+        ch_host_gff_unzipped,
       )
+      ch_host_fasta_transcripts_unzipped = PREPARE_HOST_TRANSCRIPTOME.out.transcriptome
+      }
 
-      ch_transcript_host_unzipped = PREPARE_HOST_TRANSCRIPTOME.out.transcriptome
-
-    }
-
-      if(params.transcript_fasta_pathogen){
-          ch_pathogen_transcriptome  = params.transcript_fasta_pathogen ? Channel.value(file( params.transcript_fasta_pathogen, checkIfExists: true )) : Channel.empty()
+      // PATHOGEN - Has a pathogen transcriptome (fasta) been passed? 
+      if(params.pathogen_fasta_transcripts){
           
-            if (params.transcript_fasta_pathogen.endsWith('.gz') || params.transcript_fasta_pathogen.endsWith('.zip')){
-                    UNCOMPRESS_PATHOGEN_TRANSCRIPTOME(ch_pathogen_transcriptome)
-                    ch_transcript_pathogen_unzipped = UNCOMPRESS_PATHOGEN_TRANSCRIPTOME.out.files
-            } else {
-                    ch_transcript_pathogen_unzipped = ch_pathogen_transcriptome
-            }
+          // Grab the transcriptome file
+          ch_pathogen_fasta_transcripts  = params.pathogen_fasta_transcripts ? Channel.value(file( params.pathogen_fasta_transcripts, checkIfExists: true )) : Channel.empty()
+          
+          // Uncompress if needed
+          if (params.pathogen_fasta_transcripts.endsWith('.gz') || params.pathogen_fasta_transcripts.endsWith('.zip')){
+                    UNCOMPRESS_PATHOGEN_TRANSCRIPTOME(ch_pathogen_fasta_transcripts)
+                    ch_pathogen_fasta_transcripts_unzipped = UNCOMPRESS_PATHOGEN_TRANSCRIPTOME.out.files
+          } else {
+                    ch_pathogen_fasta_transcripts_unzipped = ch_pathogen_fasta_transcripts
+          }
         
         } else {
+          // No host transcriptome passed - prepare   
           PREPARE_PATHOGEN_TRANSCRIPTOME(
-            ch_fasta_pathogen_unzipped,
-            ch_gff_pathogen_unzipped
+            ch_pathogen_fasta_transcripts_unzipped,
+            ch_pathogen_gff_unzipped
           )
-          ch_transcript_pathogen_unzipped = PREPARE_PATHOGEN_TRANSCRIPTOME.out.transcriptome
-     }
+          ch_pathogen_fasta_transcripts_unzipped = PREPARE_PATHOGEN_TRANSCRIPTOME.out.transcriptome
+        }
 
 
 
-
-      // combine pathogen and host transcriptome
-   //   transciptiome_transcriptome_to_combine = ch_host_transcriptome.mix(
-   //     ch_pathogen_transcriptome
-   //   ).collect()
-
+      // combine host and pathogen transcriptome
       COMBINE_FILES_TRANSCRIPTOME_FILES(
-        ch_transcript_host_unzipped,ch_transcript_pathogen_unzipped,'host_pathogen.transcript.fasta'
+        ch_host_fasta_transcripts_unzipped,ch_pathogen_fasta_transcripts_unzipped,'host_pathogen_transcripts.fasta'
       )
-      ch_transcriptome = COMBINE_FILES_TRANSCRIPTOME_FILES.out
+      ch_combined_fasta_transcripts = COMBINE_FILES_TRANSCRIPTOME_FILES.out
 
 
 
-    REPLACE_ATTRIBUTE_GFF_STAR_SALMON_PATHOGEN(
-           ch_gff_pathogen_unzipped,
-           params.gene_attribute_gff_to_create_transcriptome_pathogen,
-           'parent')
+      // --------------
+      // Replace attributes in the reference files 
+      // --------------
+    
+      // ---
+      // HOST
+      // ---
 
-    REPLACE_ATTRIBUTE_GFF_STAR_SALMON_HOST(
-                ch_gff_host_unzipped,
-                'Parent',
-                'parent'
-            )
+      // Replace selected attributes in gff to parent
+      // this changes the gene identifier value such as locus_tag to parent
+      REPLACE_ATTRIBUTE_GFF_STAR_SALMON_HOST(
+                  ch_host_gff_unzipped,
+                  'Parent',
+                  'parent'
+      )
 
-    if(params.gff_host_tRNA){
-        REPLACE_ATTRIBUTE_GFF_STAR_SALMON_TRNA_FILE(
-          ch_gff_host_tRNA_unzipped,
-          params.gene_attribute_gff_to_create_transcriptome_host,
-          'parent'
-        )
+      // Replace selected gene features in gff - save file with extension "_quant_feature.gff3"
+      // this changes the selected values from the third column in the GFF to quant
+      // since the input file is from replace attribute, this resulting file now has both
+      // gene attribute and gene feature changed. This is useful as the host and pathogen
+      // annotations may have different identifiers, such as locus_tag for bacteria and gene_id
+      // for human/mouse - and when combining these annotations we want to have common a 
+      // naming convention in the final file
+      ch_host_genome_gff_salmon_sa = REPLACE_ATTRIBUTE_GFF_STAR_SALMON_HOST.out
+      REPLACE_GENE_FEATURE_GFF_HOST_SALMON(
+                    ch_host_genome_gff_salmon_sa,
+                    params.gene_feature_gff_to_create_transcriptome_host
+      )
 
-        COMBINE_HOST_GENOME_TRNA_GFF_STAR_SALMON(
-                REPLACE_ATTRIBUTE_GFF_STAR_SALMON_HOST.out,
-                REPLACE_ATTRIBUTE_GFF_STAR_SALMON_TRNA_FILE.out,"host_genome_with_tRNA.gff3")
-    }
+          
 
-    ch_gff_host_genome_salmon_alignment = params.gff_host_tRNA ? COMBINE_HOST_GENOME_TRNA_GFF_STAR_SALMON.out : REPLACE_ATTRIBUTE_GFF_STAR_SALMON_HOST.out
+      // ---
+      // PATHOGEN
+      // ---
 
-    REPLACE_GENE_FEATURE_GFF_HOST_SALMON(
-                ch_gff_host_genome_salmon_alignment,
-                params.gene_feature_gff_to_create_transcriptome_host
-            )
+      // Replace selected attributes in gff to parent
+      // this changes the gene identifier value such as locus_tag to parent
+      REPLACE_ATTRIBUTE_GFF_STAR_SALMON_PATHOGEN(
+            ch_pathogen_gff_unzipped,
+            params.gene_attribute_gff_to_create_transcriptome_pathogen,
+            'parent'
+      )
 
-
-    REPLACE_GENE_FEATURE_GFF_PATHOGEN_SALMON(
-                REPLACE_ATTRIBUTE_GFF_STAR_SALMON_PATHOGEN.out,
-                ch_gene_feature_pat
-            )
-
-    COMBINE_FILES_PATHOGEN_HOST_GFF(
-                REPLACE_GENE_FEATURE_GFF_PATHOGEN_SALMON.out,
-                REPLACE_GENE_FEATURE_GFF_HOST_SALMON.out,
-                "host_pathogen_star_alignment_mode.gff"
-            )
-
-
-    EXTRACT_ANNOTATIONS_PATHOGEN_SALMON (
+      // Replace selected gene features in gff
+      // this changes the selected values from the third column in the GFF to quant
+      // since the input file is from replace attribute, this resulting file now has both
+      // gene attribute and gene feature changed. This is useful as the host and pathogen
+      // annotations may have different identifiers, such as locus_tag for bacteria and gene_id
+      // for human/mouse - and when combining these annotations we want to have common a 
+      // naming convention in the final file
+      REPLACE_GENE_FEATURE_GFF_PATHOGEN_SALMON(
             REPLACE_ATTRIBUTE_GFF_STAR_SALMON_PATHOGEN.out,
-            ch_gene_feature_pat,
-            "parent",
-            params.pathogen_organism,
-            'salmon'
-        )
+            ch_gene_feature_pathogen
+      )
 
-    EXTRACT_ANNOTATIONS_HOST_SALMON (
+          
+
+
+      // ---
+      // COMBINED
+      // ---
+      
+      // Combine gff files with replaced features and save
+      COMBINE_FILES_PATHOGEN_HOST_GFF(
+            REPLACE_GENE_FEATURE_GFF_PATHOGEN_SALMON.out,
             REPLACE_GENE_FEATURE_GFF_HOST_SALMON.out,
-            'quant',
-            'parent',
-            params.host_organism,
-            'salmon'
+            "host_pathogen.gff"
+      )
+
+
+      
+      // ---
+      // Extracting the GFF annotations into a .tsv file for downstream analysis
+      // ---
+
+      // Extract host features
+      EXTRACT_ANNOTATIONS_HOST_SALMON (
+                REPLACE_GENE_FEATURE_GFF_HOST_SALMON.out,
+                'quant',
+                'parent',
+                params.host_organism,
+                'salmon'
+      )
+
+      // Extract pathogen featues
+      EXTRACT_ANNOTATIONS_PATHOGEN_SALMON (
+              REPLACE_ATTRIBUTE_GFF_STAR_SALMON_PATHOGEN.out,
+              ch_gene_feature_pathogen,
+              "parent",
+              params.pathogen_organism,
+              'salmon'
         )
 
 
 
-  }
 
+    } // end --> if(params.run_salmon_SA | params.run_salmon_AB) {
 
 
     emit:
-      genome_fasta = COMBINE_FILES_FASTA.out
-      transcript_fasta = ch_transcriptome
-      transcript_fasta_host = ch_transcript_host_unzipped
-      transcript_fasta_pathogen = ch_transcript_pathogen_unzipped
-      host_pathoge_gff = COMBINE_FILES_PATHOGEN_HOST_GFF.out
-      annotations_host_salmon = EXTRACT_ANNOTATIONS_HOST_SALMON.out.annotations
-      annotations_pathogen_salmon = EXTRACT_ANNOTATIONS_PATHOGEN_SALMON.out.annotations
+      host_pathogen_fasta_genome = COMBINE_FILES_FASTA.out // 'host_pathogen_genome.fasta'
+      host_pathogen_fasta_transcripts = ch_combined_fasta_transcripts // 'host_pathogen_transcripts.fasta'
+      host_fasta_transcripts = ch_host_fasta_transcripts_unzipped
+      pathogen_fasta_transcripts = ch_pathogen_fasta_transcripts_unzipped
+      host_pathogen_gff = COMBINE_FILES_PATHOGEN_HOST_GFF.out // 'host_pathogen.gff'
+      annotations_host_salmon = EXTRACT_ANNOTATIONS_HOST_SALMON.out.annotations // extracted_annotations_host_salmon.tsv
+      annotations_pathogen_salmon = EXTRACT_ANNOTATIONS_PATHOGEN_SALMON.out.annotations // extracted_annotations_pathogen_salmon.tsv
     }
 

@@ -12,11 +12,11 @@ class WorkflowDualrnaseq {
     public static void initialise(params, log) {
         genomeExistsError(params, log)
 
-
-        if (!params.fasta_host) {
-            log.error "Host genome fasta file not specified with e.g. '--fasta_host genome.fa' or via a detectable config file."
-            System.exit(1)
-        }
+        // TODO - could add in checks for host and pathogen fasta and gff files??
+        // if (!params.fasta_host) {
+        //     log.error "Host genome fasta file not specified with e.g. '--fasta_host genome.fa' or via a detectable config file."
+        //     System.exit(1)
+        // }
     }
 
     //

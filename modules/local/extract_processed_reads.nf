@@ -1,5 +1,6 @@
+#!/usr/bin/env nextflow
 process EXTRACT_PROCESSED_READS {
-    tag "extract_process_reads_${process}"
+    tag "extract_processed_reads_${process}"
     label 'process_high'
 
     conda "python=3.8.3"
@@ -29,4 +30,3 @@ process EXTRACT_PROCESSED_READS {
     fi
     """
 }
-

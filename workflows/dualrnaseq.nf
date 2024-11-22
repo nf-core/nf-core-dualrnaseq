@@ -15,12 +15,12 @@ def checkPathParamList = [
     params.input,
     params.multiqc_config,
     // host
-    params.fasta_host,
-    params.gff_host,
-    params.gff_host_tRNA,
+    params.host_fasta_genome,
+    params.host_gff,
+    // params.gff_host_tRNA,
     // pathogen
-    params.fasta_pathogen,
-    params.gff_pathogen,
+    params.pathogen_fasta_genome,
+    params.pathogen_gff,
 ]
 // loop through and check all params specified above
 for (param in checkPathParamList) { if (param) { file(param, checkIfExists: true) } }
@@ -120,40 +120,42 @@ workflow DUALRNASEQ {
     }
 
 
+    // ---------------
+    // Prepare reference files
+    // ---------------
     // uncompress files, merge host and pathogen files together, 
     // update features in reference files to be compatable with software
     PREPARE_REFERENCE_FILES(
-        params.fasta_host,
-        params.gff_host,
-        params.gff_host_tRNA,
-        params.fasta_pathogen,
-        params.gff_pathogen
+        params.host_fasta_genome,
+        params.host_gff,
+        params.pathogen_fasta_genome,
+        params.pathogen_gff
     )
 
 
     // Run Salmon selective alighment
-    if ( params.run_salmon_selective_alignment ) {
+    if ( params.run_salmon_SA ) {
         SALMON_SELECTIVE_ALIGNMENT (
             ch_reads,
-            PREPARE_REFERENCE_FILES.out.genome_fasta,
-            PREPARE_REFERENCE_FILES.out.transcript_fasta,
-            PREPARE_REFERENCE_FILES.out.host_pathoge_gff,
-            PREPARE_REFERENCE_FILES.out.transcript_fasta_pathogen,
-            PREPARE_REFERENCE_FILES.out.transcript_fasta_host,
+            PREPARE_REFERENCE_FILES.out.host_pathogen_fasta_genome,
+            PREPARE_REFERENCE_FILES.out.host_pathogen_fasta_transcripts,
+            PREPARE_REFERENCE_FILES.out.host_pathogen_gff,
+            PREPARE_REFERENCE_FILES.out.pathogen_fasta_transcripts,
+            PREPARE_REFERENCE_FILES.out.host_fasta_transcripts,
             PREPARE_REFERENCE_FILES.out.annotations_host_salmon
         )
         ch_versions = ch_versions.mix(SALMON_SELECTIVE_ALIGNMENT.out.versions)
     }
 
     // Run Salmon alignment based
-    if ( params.run_salmon_alignment_based_mode ) {
+    if ( params.run_salmon_AB ) {
         SALMON_ALIGNMENT_BASED (
             ch_reads,
-            PREPARE_REFERENCE_FILES.out.genome_fasta,
-            PREPARE_REFERENCE_FILES.out.transcript_fasta,
-            PREPARE_REFERENCE_FILES.out.host_pathoge_gff,
-            PREPARE_REFERENCE_FILES.out.transcript_fasta_pathogen,
-            PREPARE_REFERENCE_FILES.out.transcript_fasta_host,
+            PREPARE_REFERENCE_FILES.out.host_pathogen_fasta_genome,
+            PREPARE_REFERENCE_FILES.out.host_pathogen_fasta_transcripts,
+            PREPARE_REFERENCE_FILES.out.host_pathogen_gff,
+            PREPARE_REFERENCE_FILES.out.pathogen_fasta_transcripts,
+            PREPARE_REFERENCE_FILES.out.host_fasta_transcripts,
             PREPARE_REFERENCE_FILES.out.annotations_host_salmon
         )
         ch_versions = ch_versions.mix(SALMON_ALIGNMENT_BASED.out.versions)

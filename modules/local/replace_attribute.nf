@@ -1,7 +1,6 @@
 // ONE FOR HOST_GENOME
-// ONE FOR HOST_TRNA
 process REPLACE_ATTRIBUTE_GFF_STAR_SALMON {
-	tag "repl_attribute_host_tRNA_gff"
+	tag "repl_GFF_attributes"
 
 	label 'process_high'
 

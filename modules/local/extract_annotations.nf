@@ -23,7 +23,7 @@ process EXTRACT_ANNOTATIONS {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "extract_annotations_${organism}_${quantifier}"
+    def prefix = task.ext.prefix ?: "extracted_annotations_${organism}_${quantifier}"
 
     """
     python $workflow.projectDir/bin/extract_annotations_from_gff.py  \\
