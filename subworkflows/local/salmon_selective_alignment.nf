@@ -70,7 +70,10 @@ workflow SALMON_SELECTIVE_ALIGNMENT {
             Channel.value("both") // combine both host and pathogen results
             )
 
-        // combine all meta data from each datasets
+        
+        // -------
+        // Combine all meta data from each datasets
+        // -------
         COMBINE_QUANTIFICATION_RESULTS_SALMON.out.combined_quant_data
         .map {it ->
             def meta = [:] // create empty map: meta

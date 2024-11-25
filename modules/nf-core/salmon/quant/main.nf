@@ -33,13 +33,15 @@ process SALMON_QUANT {
     def args = task.ext.args   ?: ''
     prefix   = task.ext.prefix ?: "${meta.id}"
 
+    // command for SA quant, whic passes the index and reads
     def reference   = "--index $index"
     def input_reads = meta.single_end ? "-r $reads" : "-1 ${reads[0]} -2 ${reads[1]}"
     
-    //def additional_params = null
+    // for AB, use transcriptome 
     if (alignment_mode) {
         reference   = "-t $transcript_fasta"
         input_reads = "-a $reads"
+        additional_params = params.salmon_ab_args ?: ''
     }
 
     def strandedness_opts = [

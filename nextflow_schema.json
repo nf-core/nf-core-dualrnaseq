@@ -39,6 +39,12 @@
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature"
+                },
+                "mapping_stats": {
+                    "type": "boolean",
+                    "description": "Option to generate mapping statistics, creating plots and summaries",
+                    "fa_icon": "fas fa-running",
+                    "help_text": "This will create the following:\n\n - Count the total number of reads before and after trimming\n - Scatterplots comparing all replicates (separate for both host and pathogen reads)\n - Plots of the % of mapped/quantified reads\n - Plots of RNA-class statistics (as many types can be identified, the parameter below `--RNA_classes_to_replace_host` can help to summarise these)"
                 }
             }
         },
