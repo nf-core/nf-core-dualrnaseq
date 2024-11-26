@@ -17,7 +17,6 @@ def checkPathParamList = [
     // host
     params.host_fasta_genome,
     params.host_gff,
-    // params.gff_host_tRNA,
     // pathogen
     params.pathogen_fasta_genome,
     params.pathogen_gff,
@@ -55,10 +54,10 @@ ch_multiqc_custom_methods_description = params.multiqc_methods_description ? fil
 //
 
 //subworkflow and module inclusion
-include { INPUT_CHECK } from '../subworkflows/local/input_check'
-include { PREPARE_REFERENCE_FILES } from '../subworkflows/local/prepare_reference_files'
-include { SALMON_SELECTIVE_ALIGNMENT } from '../subworkflows/local/salmon_selective_alignment'
-include { SALMON_ALIGNMENT_BASED } from '../subworkflows/local/salmon_alignment_based'
+include { INPUT_CHECK                       } from '../subworkflows/local/input_check'
+include { PREPARE_REFERENCE_FILES           } from '../subworkflows/local/prepare_reference_files'
+include { SALMON_SELECTIVE_ALIGNMENT        } from '../subworkflows/local/salmon_selective_alignment'
+include { SALMON_ALIGNMENT_BASED            } from '../subworkflows/local/salmon_alignment_based'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

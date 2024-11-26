@@ -108,7 +108,7 @@ workflow SALMON_SELECTIVE_ALIGNMENT {
             // Separate files for each sample
             EXTRACT_PROCESSED_READS( 
                 SALMON_QUANT.out.json_results, 
-                "salmon" // Tell the script to just look at Salmon SA output 
+                "Salmon_SA" // Tell the script to just look at Salmon SA output 
             )
 
             // Store the read count summary files from each quant run
@@ -117,7 +117,10 @@ workflow SALMON_SELECTIVE_ALIGNMENT {
                 .set { collected_processed_reads_files }
 
             // Merge all individual results into a single file
-            COLLATE_PROCESSED_READS(collected_processed_reads_files)
+            COLLATE_PROCESSED_READS(
+                collected_processed_reads_files,
+                "Salmon_SA"
+                )
 
         }
         

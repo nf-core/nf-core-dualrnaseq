@@ -5,8 +5,8 @@ include { COMBINE_QUANTIFICATION_RESULTS_SALMON             } from '../../module
 include { SALMON_SPLIT_TABLE as SALMON_SPLIT_TABLE_EACH     } from '../../modules/local/salmon_split_table'
 include { SALMON_SPLIT_TABLE as SALMON_SPLIT_TABLE_COMBINED } from '../../modules/local/salmon_split_table'
 include { EXTRACT_PROCESSED_READS                           } from '../../modules/local/extract_processed_reads'
-include { TXIMPORT                         } from '../../modules/local/tximport/main'
-include { COMBINE_QUANTIFICATION_RESULTS_SALMON as COMBINE_QUANTIFICATION_RESULTS_TXIMPORT             } from '../../modules/local/combine_quantification_results_salmon'
+include { TXIMPORT                                          } from '../../modules/local/tximport/main'
+include { COLLATE_PROCESSED_READS                           } from '../../modules/local/collate_processed_reads'
 
 
 workflow SALMON_ALIGNMENT_BASED {
@@ -30,7 +30,7 @@ workflow SALMON_ALIGNMENT_BASED {
             ch_host_pathogen_fasta_genome, 
             ch_host_pathogen_gff 
             )
-        ch_versions = ch_versions.mix(STAR_GENOMEGENERATE.out.versions.first())
+        ch_versions = ch_versions.mix(STAR_GENOMEGENERATE.out.versions)
 
 
         // -------
@@ -43,7 +43,7 @@ workflow SALMON_ALIGNMENT_BASED {
                      '', // seq_platform
                      '' // seq_centre
                      )
-        ch_versions = ch_versions.mix(STAR_ALIGN.out.versions.first())
+        ch_versions = ch_versions.mix(STAR_ALIGN.out.versions)
 
       
         // Set to true, as were using alignment-based (with STAR), not selective alignment and Salmon directly
@@ -116,7 +116,18 @@ workflow SALMON_ALIGNMENT_BASED {
         if (params.mapping_stats) {
             EXTRACT_PROCESSED_READS( 
                 SALMON_QUANT.out.json_results, 
-                "salmon_alignment" 
+                "Salmon_AB" 
+                )
+
+            // Store the read count summary files from each quant run
+            EXTRACT_PROCESSED_READS.out.collect_results
+                .collect()
+                .set { collected_processed_reads_files }
+
+            // Merge all individual results into a single file
+            COLLATE_PROCESSED_READS(
+                collected_processed_reads_files,
+                "Salmon_AB"
                 )
         }
         

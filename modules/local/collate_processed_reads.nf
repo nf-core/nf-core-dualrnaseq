@@ -5,9 +5,13 @@ process COLLATE_PROCESSED_READS {
 
     input:
     file partial_results
+    val(process)
 
     output:
     path 'total_processed_reads.tsv'
+
+    // Set publishDir to the process using inputs.process
+    publishDir "${params.outdir}/mapping_statistics/${process}/", mode: params.publish_dir_mode
 
     script:
     """
